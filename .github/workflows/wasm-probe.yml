@@ -32,6 +32,7 @@ jobs:
           mkdir -p dist
           em++ webport/wasm_probe.cpp \
             -O2 \
+            -s SINGLE_FILE=1 \
             -s MODULARIZE=1 \
             -s EXPORT_NAME=createGeodeWebProbe \
             -s EXPORTED_FUNCTIONS='["_add","_webport_version"]' \
