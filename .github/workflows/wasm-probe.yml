@@ -1,0 +1,50 @@
+name: Geode WebPort - Emscripten probe
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "webport/**"
+      - ".github/workflows/wasm-probe.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-wasm-probe:
+    name: Compile WebAssembly compatibility probe
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.64
+          actions-cache-folder: emsdk-cache
+
+      - name: Show compiler version
+        run: em++ --version
+
+      - name: Compile probe
+        run: |
+          mkdir -p dist
+          em++ webport/wasm_probe.cpp \
+            -O2 \
+            -s MODULARIZE=1 \
+            -s EXPORT_NAME=createGeodeWebProbe \
+            -s EXPORTED_FUNCTIONS='["_add","_webport_version"]' \
+            -s EXPORTED_RUNTIME_METHODS='["ccall","cwrap"]' \
+            -o dist/geode-web-probe.js
+
+      - name: Include browser smoke test
+        run: cp webport/probe.html dist/index.html
+
+      - name: Upload WASM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: geode-webport-wasm-probe
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
