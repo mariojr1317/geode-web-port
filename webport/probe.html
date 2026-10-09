@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Geode WebPort — WASM probe</title>
+  <style>
+    body { font: 16px system-ui, sans-serif; max-width: 720px; margin: 3rem auto; padding: 0 1rem; }
+    button { padding: .65rem 1rem; cursor: pointer; }
+    pre { padding: 1rem; background: #eee; color: #111; border-radius: .5rem; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Geode WebPort: WASM probe</h1>
+  <p>This only tests the Emscripten toolchain. It is not the Geode loader and does not load Geometry Dash or .geode mods.</p>
+  <button id="run" disabled>Run WASM test</button>
+  <pre id="output">Loading WebAssembly module…</pre>
+  <script src="./geode-web-probe.js"></script>
+  <script>
+    const output = document.querySelector("#output");
+    const button = document.querySelector("#run");
+    createGeodeWebProbe().then(Module => {
+      const add = Module.cwrap("add", "number", ["number", "number"]);
+      const version = Module.cwrap("webport_version", "string", []);
+      button.disabled = false;
+      output.textContent = "Loaded: " + version() + "\nClick the button to run the test.";
+      button.addEventListener("click", () => {
+        output.textContent = "Loaded: " + version() + "\nadd(20, 22) = " + add(20, 22) +
+          (add(20, 22) === 42 ? "\nPASS: WASM function executed." : "\nFAIL: unexpected result.");
+      });
+    }).catch(error => {
+      output.textContent = "FAILED TO LOAD WASM\n" + (error?.stack || error);
+    });
+  </script>
+</body>
+</html>
